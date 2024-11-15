@@ -1,0 +1,65 @@
+version: '3'
+
+services:
+  app:
+    build:
+      context: .
+    image: bus_travel
+    container_name: bus_travel
+    restart: unless-stopped
+    tty: true
+    environment:
+      SERVICE_NAME: app
+    working_dir: /var/www/bus_travel
+    volumes:
+      - .:/var/www/bus_travel/
+      - ./storage/php.ini:/usr/local/etc/php/conf.d/local.ini
+    networks:
+      - bus_travel
+
+  webserver:
+    image: nginx:alpine
+    container_name: nginxbus_travel
+    restart: unless-stopped
+    tty: true
+    ports:
+      - "2023:80"
+    volumes:
+      - .:/var/www/bus_travel
+      - ./storage/:/etc/nginx/conf.d/
+    networks:
+      - bus_travel
+
+  db:
+    image: mysql:5.7
+    container_name: dbbus_travel
+    restart: always
+    tty: true
+    ports:
+      - "20223:3306"
+    volumes:
+      - lbdata:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ilman123
+      MYSQL_DATABASE: bus_travel
+    networks:
+      - bus_travel
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: pmabus_travel
+    links:
+      - db
+    restart: always
+    ports:
+      - "7001:80"
+    networks:
+      - bus_travel
+
+networks:
+  bus_travel:
+    driver: bridge
+
+volumes:
+  lbdata:
+    driver: local
